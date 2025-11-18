@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup environment
+      run: |
+        npm install
+        pip install -r requirements.txt
+        
+    - name: Run unit tests
+      run: npm test -- --coverage
+      
+    - name: Run integration tests
+      run: npm run test:integration
+      
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+
+  quality-gate:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Quality Approval
+      run: |
+        echo "Waiting for QA approval..."
